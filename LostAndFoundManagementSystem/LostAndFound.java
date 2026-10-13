@@ -14,6 +14,7 @@ public class LostAndFound {
         loadItems();
     }
 
+    // Load item records from the file
     private void loadItems() {
         items.clear();
 
@@ -25,10 +26,10 @@ public class LostAndFound {
             while ((line = reader.readLine()) != null) {
                 String[] data = line.split("\\|", -1);
 
-                if (data.length == 7) {
+                if (data.length == 5) {
                     Item item = new Item(
-                        data[0], data[1], data[2], data[3],
-                        data[4], data[5], data[6]
+                        data[0], data[1], data[2],
+                        data[3], data[4]
                     );
 
                     items.add(item);
@@ -40,6 +41,7 @@ public class LostAndFound {
         }
     }
 
+    // Save item records to the file
     private void saveItems() {
         try (BufferedWriter writer = new BufferedWriter(
                 new FileWriter("ITEMS.txt"))) {
@@ -49,9 +51,7 @@ public class LostAndFound {
                     item.getItemID() + "|" +
                     item.getItemName() + "|" +
                     item.getDescription() + "|" +
-                    item.getCategory() + "|" +
                     item.getDateReported() + "|" +
-                    item.getLocation() + "|" +
                     item.getStatus()
                 );
 
@@ -67,6 +67,7 @@ public class LostAndFound {
         return items.isEmpty();
     }
 
+    // Check whether an ID already exists
     public boolean idExists(String itemID) {
         for (Item item : items) {
             if (item.getItemID().equalsIgnoreCase(itemID)) {
@@ -77,6 +78,7 @@ public class LostAndFound {
         return false;
     }
 
+    // Add a new item
     public void addItem(Item item) {
         if (idExists(item.getItemID())) {
             System.out.println("Item ID already exists!");
@@ -89,10 +91,15 @@ public class LostAndFound {
         System.out.println("Item added successfully!");
     }
 
+    // Linear Search: find by exact ID or keyword
     public Item searchItem(String keyword) {
         for (Item item : items) {
             if (item.getItemID().equalsIgnoreCase(keyword)
-                    || item.getItemName().equalsIgnoreCase(keyword)) {
+                    || item.getItemName().toLowerCase()
+                        .contains(keyword.toLowerCase())
+                    || item.getDescription().toLowerCase()
+                        .contains(keyword.toLowerCase())) {
+
                 return item;
             }
         }
@@ -100,46 +107,124 @@ public class LostAndFound {
         return null;
     }
 
+    // Display all records in a table
     public void displayAllItems() {
         if (items.isEmpty()) {
             System.out.println("No items yet.");
             return;
         }
 
+        printTableHeader();
+
         for (Item item : items) {
-            displayItem(item);
+            printTableRow(item);
         }
+
+        printTableBorder();
     }
 
+    private void printTableHeader() {
+        printTableBorder();
+
+        System.out.printf(
+            "| %-12s | %-20s | %-35s | %-12s | %-10s |%n",
+            "Item ID", "Item Name", "Description",
+            "Date Reported", "Status"
+        );
+
+        printTableBorder();
+    }
+
+    private void printTableRow(Item item) {
+        System.out.printf(
+            "| %-12s | %-20s | %-35s | %-12s | %-10s |%n",
+            formatCell(item.getItemID(), 12),
+            formatCell(item.getItemName(), 20),
+            formatCell(item.getDescription(), 35),
+            formatCell(item.getDateReported(), 12),
+            formatCell(item.getStatus(), 10)
+        );
+    }
+
+    private void printTableBorder() {
+        System.out.println(
+            "+--------------+----------------------+"
+            + "-------------------------------------+"
+            + "--------------+------------+"
+        );
+    }
+
+    // Keep table columns aligned when a value is too long
+    private String formatCell(String value, int maxLength) {
+        if (value.length() > maxLength) {
+            return value.substring(0, maxLength - 3) + "...";
+        }
+
+        return value;
+    }
+
+    // Display one item's complete details
     public void displayItem(Item item) {
-        System.out.println("\nItem ID: " + item.getItemID());
-        System.out.println("Item Name: " + item.getItemName());
-        System.out.println("Description: " + item.getDescription());
-        System.out.println("Category: " + item.getCategory());
+        if (item == null) {
+            System.out.println("Item not found!");
+            return;
+        }
+
+        System.out.println("\n========================================");
+        System.out.println("             ITEM DETAILS");
+        System.out.println("========================================");
+        System.out.println("Item ID:       " + item.getItemID());
+        System.out.println("Item Name:     " + item.getItemName());
+        System.out.println("Description:   " + item.getDescription());
         System.out.println("Date Reported: " + item.getDateReported());
-        System.out.println("Location: " + item.getLocation());
-        System.out.println("Status: " + item.getStatus());
+        System.out.println("Status:        " + item.getStatus());
+        System.out.println("========================================");
     }
 
-    public boolean updateItem(String itemID, String description,
-                              String category, String location) {
-
-        Item item = searchItem(itemID);
+    // Edit an item's name and description
+    public boolean updateItem(String itemID, String itemName,
+                              String description) {
+        Item item = findByID(itemID);
 
         if (item == null) {
             return false;
         }
 
+        item.setItemName(itemName);
         item.setDescription(description);
-        item.setCategory(category);
-        item.setLocation(location);
 
         saveItems();
         return true;
     }
 
+    // Delete an item record
+    public boolean removeItem(String itemID) {
+        Item item = findByID(itemID);
+
+        if (item == null) {
+            return false;
+        }
+
+        items.remove(item);
+        saveItems();
+
+        return true;
+    }
+
+    // Find a record using its exact ID
+    private Item findByID(String itemID) {
+        for (Item item : items) {
+            if (item.getItemID().equalsIgnoreCase(itemID)) {
+                return item;
+            }
+        }
+
+        return null;
+    }
+
+    // Mark a found item as claimed
     public boolean claimItem(String itemID) {
-        Item item = searchItem(itemID);
+        Item item = findByID(itemID);
 
         if (item == null) {
             return false;
@@ -155,13 +240,20 @@ public class LostAndFound {
         return true;
     }
 
-    public void sortItemsByName() {
+    // Insertion Sort: oldest report date to newest
+    // Dates must use the yyyy-MM-dd format
+    public void sortItemsByDate() {
+        if (items.isEmpty()) {
+            System.out.println("No items to sort.");
+            return;
+        }
+
         for (int i = 1; i < items.size(); i++) {
             Item current = items.get(i);
             int j = i - 1;
 
-            while (j >= 0 && items.get(j).getItemName()
-                    .compareToIgnoreCase(current.getItemName()) > 0) {
+            while (j >= 0 && items.get(j).getDateReported()
+                    .compareTo(current.getDateReported()) > 0) {
 
                 items.set(j + 1, items.get(j));
                 j--;
@@ -170,20 +262,30 @@ public class LostAndFound {
             items.set(j + 1, current);
         }
 
-        System.out.println("Items sorted by name.");
+        saveItems();
+
+        System.out.println("Items sorted by date successfully!");
+        displayAllItems();
     }
 
+    // Display all items that have been found but not claimed
     public void displayUnclaimedItems() {
         boolean found = false;
 
         for (Item item : items) {
             if (item.getStatus().equalsIgnoreCase("Found")) {
-                displayItem(item);
+                if (!found) {
+                    printTableHeader();
+                }
+
+                printTableRow(item);
                 found = true;
             }
         }
 
-        if (!found) {
+        if (found) {
+            printTableBorder();
+        } else {
             System.out.println("No unclaimed items yet.");
         }
     }
