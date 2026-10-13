@@ -5,6 +5,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.time.LocalDate;
+import java.util.Random;
 
 public class LostAndFound {
 
@@ -63,6 +65,7 @@ public class LostAndFound {
         }
     }
 
+    // Check whether there are no item records
     public boolean isEmpty() {
         return items.isEmpty();
     }
@@ -123,6 +126,7 @@ public class LostAndFound {
         printTableBorder();
     }
 
+    // Display the table header
     private void printTableHeader() {
         printTableBorder();
 
@@ -135,6 +139,7 @@ public class LostAndFound {
         printTableBorder();
     }
 
+    // Display one item as a table row
     private void printTableRow(Item item) {
         System.out.printf(
             "| %-12s | %-20s | %-35s | %-12s | %-10s |%n",
@@ -146,6 +151,7 @@ public class LostAndFound {
         );
     }
 
+    // Display the table border
     private void printTableBorder() {
         System.out.println(
             "+--------------+----------------------+"
@@ -288,5 +294,27 @@ public class LostAndFound {
         } else {
             System.out.println("No unclaimed items yet.");
         }
+    }
+
+    // Generate a unique ID using the current year and four random digits
+    public String generateID() {
+        Random random = new Random();
+        String itemID;
+        boolean exists = true;
+
+        while (exists) {
+            int number = random.nextInt(10000);
+
+            itemID = LocalDate.now().getYear()
+                    + String.format("%04d", number);
+
+            exists = idExists(itemID);
+
+            if (!exists) {
+                return itemID;
+            }
+        }
+
+        return "";
     }
 }

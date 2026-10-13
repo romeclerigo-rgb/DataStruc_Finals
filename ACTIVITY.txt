@@ -1,2 +1,5 @@
 Reported item: JisuLife Pro 1 (123)
 Updated item: 123
+Reported item: Rome (1A)
+Reported item: Rome (2A)
+Status changed: 2A (Found -> Claimed)

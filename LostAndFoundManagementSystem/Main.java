@@ -35,7 +35,9 @@ public class Main {
 
             switch (choice) {
                 case 1:
-                    String itemID = validation.getItemID(sc, lostAndFound);
+                    String itemID = lostAndFound.generateID();
+
+                    System.out.println("Generated Item ID: " + itemID);
 
                     String itemName = validation.getItemName(sc);
 
